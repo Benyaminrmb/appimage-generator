@@ -46,13 +46,13 @@ if [ $? -ne 0 ]; then
 fi
 
 # Create symbolic link for shorter command
-ln -sf "$INSTALL_DIR/$SCRIPT_NAME" "$INSTALL_DIR/ai"
+ln -sf "$INSTALL_DIR/$SCRIPT_NAME" "$INSTALL_DIR/appimage"
 
 # Cleanup
 rm -rf "$TEMP_DIR"
 
 print_message "AppImage Integrator has been successfully installed!" "$GREEN"
-print_message "You can now use it with either 'appimage-integrator' or the shorter 'ai' command" "$BLUE"
+print_message "You can now use it with either 'appimage-integrator' or the shorter 'appimage' command" "$BLUE"
 print_message "Example usage:" "$BLUE"
 print_message "  appimage-integrator /path/to/your/app.AppImage" "$GREEN"
-print_message "  ai /path/to/your/app.AppImage" "$GREEN" 
+print_message "  appimage /path/to/your/app.AppImage" "$GREEN" 
