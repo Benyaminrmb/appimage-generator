@@ -73,11 +73,12 @@ DEBUG_MODE=false
 # Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
-YELLOW='\033[0;33m'
+YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 MAGENTA='\033[0;35m'
 CYAN='\033[0;36m'
 BOLD='\033[1m'
+DIM='\033[2m'
 ITALIC='\033[3m'
 UNDERLINE='\033[4m'
 NC='\033[0m' # No Color
@@ -443,7 +444,6 @@ find_icon() {
     fi
 }
 
-
 # Improved create_desktop_entry function
 create_desktop_entry() {
     local app_name="$1"
@@ -549,37 +549,34 @@ EOF
 
     return 0
 }
+
+# Improved verify_appimage_execution function
 verify_appimage_execution() {
     local app_path="$1"
     local app_name="$2"
-
-    print_status "Verifying that the application can be launched..."
-
-    local cmd=""
-    if [ "$ELECTRON_APP" = true ]; then
-        cmd="\"$app_path\" --no-sandbox --version"
-    else
-        cmd="\"$app_path\" --version"
-    fi
-
-    # Try to run in the background with a timeout
-    timeout 5s bash -c "$cmd" >/dev/null 2>&1 &
-    local pid=$!
-
-    # Wait briefly
-    sleep 2
-
-    # Check if process is still running or exited successfully
-    if kill -0 $pid 2>/dev/null || wait $pid; then
-        print_success "Application appears to be working correctly"
-        # Kill the process if it's still running
-        kill $pid 2>/dev/null
-        return 0
-    else
-        print_warning "Application might have issues running"
-        print_info "Try running it manually: $app_path --no-sandbox"
-        return 1
-    fi
+    
+    print_status "Verifying application launch..."
+    
+    # Try different launch methods
+    local launch_methods=(
+        ""
+        "--no-sandbox"
+        "--appimage-extract-and-run"
+    )
+    
+    for method in "${launch_methods[@]}"; do
+        print_info "Trying launch method: ${method:-default}"
+        if timeout 5s "$app_path" $method --version >/dev/null 2>&1 ||
+           timeout 5s "$app_path" $method --help >/dev/null 2>&1; then
+            print_success "Application verified successfully with: ${method:-default mode}"
+            return 0
+        fi
+    done
+    
+    print_warning "Could not verify application launch"
+    print_info "The application might still work. Try running it manually:"
+    echo -e "${CYAN}▪${NC} ${GREEN}$app_path${NC}"
+    return 1
 }
 
 # List installed AppImages
@@ -1103,7 +1100,6 @@ main() {
         cleanup
         exit 1
     fi
-
 
     # After creating the desktop entry:
     if [ "$ELECTRON_APP" = true ]; then
